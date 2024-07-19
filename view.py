@@ -11,9 +11,14 @@ class View:
 
     def render_listmenu(self, menu):
         FIRST_ITEM_BASELINE = 41
+        FIRST_ITEM_START = 28
+        LINE_HEIGHT = 16
+        LINE_WIDTH = 92
+        MAX_DISPLAY_ITEMS = 6
         REGULAR_FONT_SIZE = 15
         SMALL_FONT_SIZE = 11
-        LINE_HEIGHT = 16
+        BLACK = 0
+        WHITE = 1
 
         font_regular = ImageFont.truetype(
             (self.fonts_dir / "Cantarell-VF.otf").resolve(), size=REGULAR_FONT_SIZE
@@ -26,17 +31,41 @@ class View:
         # modify bitmap in-place
         drawing = ImageDraw.Draw(bitmap)
 
-        for i, child in enumerate(menu.children):
+        start_child_index = max(
+            0,
+            menu.children.index(menu.selected_child) - MAX_DISPLAY_ITEMS - 1,
+        )
+        end_child_index = start_child_index + MAX_DISPLAY_ITEMS
+
+        for i, child in enumerate(menu.children[start_child_index:end_child_index]):
+            font_color = BLACK
+
+            # invert background for selected items
+            if child is menu.selected_child:
+                font_color = WHITE
+                drawing.rectangle(
+                    [
+                        (0, FIRST_ITEM_START + LINE_HEIGHT * i),
+                        (LINE_WIDTH, FIRST_ITEM_START + LINE_HEIGHT * (i + 1)),
+                    ],
+                    not font_color,
+                )
+
+            # draw name
             drawing.text(
                 (2, FIRST_ITEM_BASELINE + LINE_HEIGHT * i),
                 child.name,
+                fill=font_color,
                 font=font_regular,
                 anchor="ls",
             )
+
+            # draw value for MenuItems
             if isinstance(child, MenuItem):
                 drawing.text(
                     (193, FIRST_ITEM_BASELINE + LINE_HEIGHT * i),
                     child.value,
+                    fill=font_color,
                     font=font_small,
                     anchor="rs",
                 )

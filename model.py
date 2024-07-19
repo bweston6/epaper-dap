@@ -4,41 +4,43 @@ import logging
 
 
 class Model:
-    index = 0
-    MAIN_MENU = TileMenu(name="Main Menu", background_bitmap="menu_main.bmp")
-    MAIN_MENU.add_children(
-        [
-            ListMenu(name="Songs"),
-            ListMenu(name="Albums"),
-            ListMenu(name="Artists"),
-            ListMenu(name="Playlists"),
-            ListMenu(
-                name="Settings",
-                background_bitmap="menu_settings.bmp",
-            ).add_children(
-                [
-                    ListMenu(
-                        name="Bluetooth",
-                        background_bitmap="menu_settings_bluetooth.bmp",
-                    ),
-                    MenuItem(name="Theme", value="Light"),
-                ]
-            ),
-            TileMenu(name="Now Playing"),
-        ]
-    )
-    MAIN_MENU.child_locations = [
-        Rectangle(Point(0, 0), Point(82, 61)),  # songs
-        Rectangle(Point(83, 0), Point(166, 61)),  # albums
-        Rectangle(Point(167, 0), Point(250, 61)),  # artists
-        Rectangle(Point(0, 62), Point(82, 122)),  # playlists
-        Rectangle(Point(83, 62), Point(166, 122)),  # settings
-        Rectangle(Point(167, 62), Point(250, 122)),  # now playing
-    ]
-
     def __init__(self, view):
         self.view = view
-        self.current_menu = self.MAIN_MENU
+        self.root_menu = TileMenu(
+            model=self, name="Main Menu", background_bitmap="menu_main.bmp"
+        )
+        self.root_menu.add_children(
+            [
+                ListMenu(model=self, name="Songs"),
+                ListMenu(model=self, name="Albums"),
+                ListMenu(model=self, name="Artists"),
+                ListMenu(model=self, name="Playlists"),
+                ListMenu(
+                    model=self,
+                    name="Settings",
+                    background_bitmap="menu_settings.bmp",
+                ).add_children(
+                    [
+                        ListMenu(
+                            model=self,
+                            name="Bluetooth",
+                            background_bitmap="menu_settings_bluetooth.bmp",
+                        ),
+                        MenuItem(name="Theme", value="Light"),
+                    ]
+                ),
+                TileMenu(model=self, name="Now Playing"),
+            ]
+        )
+        self.root_menu.child_locations = [
+            Rectangle(Point(0, 0), Point(82, 61)),  # songs
+            Rectangle(Point(83, 0), Point(166, 61)),  # albums
+            Rectangle(Point(167, 0), Point(250, 61)),  # artists
+            Rectangle(Point(0, 62), Point(82, 122)),  # playlists
+            Rectangle(Point(83, 62), Point(166, 122)),  # settings
+            Rectangle(Point(167, 62), Point(250, 122)),  # now playing
+        ]
+        self.current_menu = self.root_menu
 
     @property
     def current_menu(self):

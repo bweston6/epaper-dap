@@ -101,19 +101,6 @@ def main():
                 controller.touch_current.X[0],
             )
 
-            if isinstance(model.current_menu, TileMenu):
-                for i, touch_target in enumerate(model.current_menu.child_locations):
-                    if (
-                        touch_target.point1 <= touch_point
-                        and touch_point <= touch_target.point2
-                    ):
-                        selected_menu = model.current_menu.children[i]
-                model.current_menu = selected_menu
-                continue
-
-            if isinstance(model.current_menu, ListMenu):
-                pass
-
             # navigate back
             if (
                 controller.touch_current.timestamp - controller.touch_old.timestamp
@@ -122,6 +109,27 @@ def main():
                 and model.current_menu.parent is not None
             ):
                 model.current_menu = model.current_menu.parent
+                continue
+
+            if isinstance(model.current_menu, TileMenu):
+                for i, touch_target in enumerate(model.current_menu.child_locations):
+                    if (
+                        touch_target.point1 <= touch_point
+                        and touch_point <= touch_target.point2
+                    ):
+                        model.current_menu = model.current_menu.children[i]
+                        break
+                continue
+
+            if isinstance(model.current_menu, ListMenu):
+                for button in model.current_menu.buttons:
+                    touch_target = button.location
+                    if (
+                        touch_target.point1 <= touch_point
+                        and touch_point <= touch_target.point2
+                    ):
+                        button.callback()
+                        break
                 continue
 
 
