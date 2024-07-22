@@ -6,6 +6,9 @@ import logging
 class Model:
     def __init__(self, view):
         self.view = view
+        self.current_menu = None
+        self.invert = False
+
         self.root_menu = TileMenu(
             model=self, name="Main Menu", background_bitmap="menu_main.bmp"
         )
@@ -26,7 +29,11 @@ class Model:
                             name="Bluetooth",
                             background_bitmap="menu_settings_bluetooth.bmp",
                         ),
-                        MenuItem(name="Theme", value="Light"),
+                        MenuItem(
+                            name="Invert",
+                            value=str(self.invert),
+                            callback=self.invert_callback,
+                        ),
                     ]
                 ),
                 TileMenu(model=self, name="Now Playing"),
@@ -48,7 +55,11 @@ class Model:
 
     @current_menu.setter
     def current_menu(self, other):
-        assert isinstance(other, Menu)
         self._current_menu = other
-        logging.debug(f"Model: navigate to {str(self.current_menu)}")
-        self.view.render_menu(self.current_menu)
+        if isinstance(other, Menu):
+            logging.info(f"Model: navigate to {str(self.current_menu)}")
+            self.view.render_menu(self.current_menu, invert=self.invert)
+
+    def invert_callback(self):
+        self.invert = not self.invert
+        self.view.render_menu(self.current_menu, invert=self.invert)

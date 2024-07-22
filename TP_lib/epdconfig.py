@@ -44,14 +44,11 @@ INT = 27
 
 spi = spidev.SpiDev(0, 0)
 address = 0x0
-# address = 0x14
-# address = 0x48
 bus = SMBus(1)
 
 
 GPIO_RST_PIN = gpiozero.LED(EPD_RST_PIN)
 GPIO_DC_PIN = gpiozero.LED(EPD_DC_PIN)
-# GPIO_CS_PIN     = gpiozero.LED(EPD_CS_PIN)
 GPIO_TRST = gpiozero.LED(TRST)
 
 GPIO_BUSY_PIN = gpiozero.Button(EPD_BUSY_PIN, pull_up=False)
@@ -69,11 +66,6 @@ def digital_write(pin, value):
             GPIO_DC_PIN.on()
         else:
             GPIO_DC_PIN.off()
-    # elif pin == EPD_CS_PIN:
-    #     if value:
-    #         GPIO_CS_PIN.on()
-    #     else:
-    #         GPIO_CS_PIN.off()
     elif pin == TRST:
         if value:
             GPIO_TRST.on()
@@ -86,10 +78,6 @@ def digital_read(pin):
         return GPIO_BUSY_PIN.value
     elif pin == INT:
         return GPIO_INT.value
-
-def digital_callback(pin, callback):
-    return False
-
 
 
 def delay_ms(delaytime):
@@ -123,27 +111,23 @@ def i2c_readbyte(reg, len):
 
 
 def module_init():
-
     spi.max_speed_hz = 10000000
     spi.mode = 0b00
-
     return 0
 
 
 def module_exit():
-    logging.debug("epdconfig: spi end")
     spi.close()
     bus.close()
+    logging.debug("epdconfig: spi end")
 
-    logging.debug("epdconfig: close 5V, Module enters 0 power consumption ...")
     GPIO_RST_PIN.off()
     GPIO_DC_PIN.off()
-    # GPIO_CS_PIN.off()
     GPIO_TRST.off()
+    logging.debug("epdconfig: close 5V, Module enters 0 power consumption ...")
 
     GPIO_RST_PIN.close()
     GPIO_DC_PIN.close()
-    # GPIO_CS_PIN.close()
     GPIO_TRST.close()
 
     GPIO_BUSY_PIN.close()

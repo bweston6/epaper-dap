@@ -1,34 +1,51 @@
-from PIL import Image, ImageDraw, ImageFont
-from menu import ListMenu, TileMenu, MenuItem
 from pathlib import Path
+
+from PIL import Image, ImageDraw, ImageFont, ImageOps
+
+from display import Display
+from menu import ListMenu, TileMenu, MenuItem
 
 
 class View:
-    def __init__(self, display):
-        self.display = display
+    def __init__(self):
+        self.display = Display(rotate=90)
         self.bitmaps_dir = (Path(__file__).parent / "./assets/bitmaps").resolve()
         self.fonts_dir = (Path(__file__).parent / "./assets/fonts").resolve()
+        self.invert = False
 
-    def render_listmenu(self, menu):
+    def __enter__(self):
+        return self
+
+    def __exit__(self, exc_type, exc_value, traceback):
+        self._close_resources()
+
+    def __del__(self):
+        self._close_resources()
+
+    def _close_resources(self):
+        del self.display
+
+    def render_listmenu(self, menu, partial_refresh=False):
         FIRST_ITEM_BASELINE = 41
         FIRST_ITEM_START = 28
         LINE_HEIGHT = 16
-        LINE_WIDTH = 92
+        LINE_WIDTH = 198
         MAX_DISPLAY_ITEMS = 6
         REGULAR_FONT_SIZE = 15
         SMALL_FONT_SIZE = 11
         BLACK = 0
-        WHITE = 1
+        WHITE = 255
 
         font_regular = ImageFont.truetype(
-            (self.fonts_dir / "Cantarell-VF.otf").resolve(), size=REGULAR_FONT_SIZE
+            (self.fonts_dir / "Cantarell-VF.otf").resolve(),
+            size=REGULAR_FONT_SIZE,
         )
         font_small = ImageFont.truetype(
-            (self.fonts_dir / "Cantarell-VF.otf").resolve(), size=SMALL_FONT_SIZE
+            (self.fonts_dir / "Cantarell-VF.otf").resolve(),
+            size=SMALL_FONT_SIZE,
         )
+
         bitmap = Image.open((self.bitmaps_dir / menu.background_bitmap).resolve())
-        bitmap = bitmap.rotate(-90, expand=True)
-        # modify bitmap in-place
         drawing = ImageDraw.Draw(bitmap)
 
         start_child_index = max(
@@ -37,7 +54,9 @@ class View:
         )
         end_child_index = start_child_index + MAX_DISPLAY_ITEMS
 
-        for i, child in enumerate(menu.children[start_child_index:end_child_index]):
+        for i, child in enumerate(
+            menu.children[start_child_index:end_child_index],
+        ):
             font_color = BLACK
 
             # invert background for selected items
@@ -73,18 +92,26 @@ class View:
         listmenu_buttons_bitmap = Image.open(
             (self.bitmaps_dir / "listmenu_buttons.bmp").resolve()
         )
-        bitmap = bitmap.rotate(90, expand=True)
-        bitmap.paste(listmenu_buttons_bitmap)
-        self.display.displayPartBaseImage(self.display.getbuffer(bitmap))
+        bitmap.paste(listmenu_buttons_bitmap, (self.display.width - 54, 0))
+        return bitmap
 
     def render_tilemenu(self, menu):
-        bitmap = Image.open((self.bitmaps_dir / menu.background_bitmap).resolve())
-        self.display.displayPartBaseImage(self.display.getbuffer(bitmap))
+        return Image.open((self.bitmaps_dir / menu.background_bitmap).resolve())
 
-    def render_menu(self, menu):
-        self.display.init(self.display.FULL_UPDATE)
+    def render_menu(self, menu, partial_refresh=True, invert=False):
         if isinstance(menu, ListMenu):
-            self.render_listmenu(menu)
+            bitmap = self.render_listmenu(menu)
         if isinstance(menu, TileMenu):
-            self.render_tilemenu(menu)
-        self.display.sleep()
+            bitmap = self.render_tilemenu(menu)
+        if invert:
+            bitmap = ImageOps.invert(bitmap)
+        if partial_refresh:
+            self.display.display(
+                bitmap,
+                update_mode=self.display.PARTIAL_UPDATE,
+            )
+        else:
+            self.display.display(
+                bitmap,
+                update_mode=self.display.FULL_UPDATE,
+            )

@@ -1,15 +1,13 @@
-# import lib.bluetoothctl as bluetoothctl
-from TP_lib import epd2in13_V3
-from TP_lib import gt1151
+import logging
+
 from menu import TileMenu, ListMenu
 from model import Model
 from shapes import Point
+from touch import Touch
+from TP_lib import epd2in13_V3
 from view import View
-import logging
-import threading
-import time
 
-logging.basicConfig(level=logging.DEBUG)
+logging.basicConfig(level=logging.INFO)
 
 
 class Controller:
@@ -17,43 +15,18 @@ class Controller:
         self.touch_flag = False
         self.poll_touch = True
 
-        self.display = epd2in13_V3.EPD()
-
-        self.gt = gt1151.GT1151()
-        self.gt.GT_Init()
-
-        self.touch_current = gt1151.GT_Development()
-        self.touch_old = gt1151.GT_Development()
-
-        # init touch thread
-        self.touch_handler_thread = threading.Thread(
-            target=self.touch_handler,
-        )
-        # self.touch_handler_thread.daemon = True
-        self.touch_handler_thread.start()
+        self.view = View()
+        self.model = Model(self.view)
+        self.touch = Touch()
 
     def __enter__(self):
         return self
 
     def __exit__(self, exc_type, exc_value, traceback):
         print("Controller: cleaning up")
-        # stop touch handler thread
-        self.poll_touch = False
-        self.touch_handler_thread.join()
-
         # shutdown display
-        self.display.sleep()
-        self.display.Dev_exit()
-
-    def touch_handler(self):
-        logging.debug("Controller: set_touch_flag started")
-        touch_irq_pin = self.gt.INT
-        while self.poll_touch:
-            # active low
-            irq = not self.gt.digital_read(touch_irq_pin)
-            self.touch_current.Touch = irq
-            self.touch_flag = irq
-            self.gt.GT_Scan(self.touch_current, self.touch_old)
+        del self.model
+        del self.view
 
     def print_peripherals(self, peripherals):
         print("printing peripherals:")
@@ -76,11 +49,23 @@ class Controller:
 
 def main():
     with Controller() as controller:
-        view = View(controller.display)
-        model = Model(view)
+        controller.model.current_menu = controller.model.current_menu.children[4]
+        controller.model.current_menu.buttons[2].callback()
+        controller.model.current_menu.buttons[1].callback()
+        controller.model.current_menu.buttons[1].callback()
+        controller.model.current_menu.buttons[0].callback()
+        controller.model.current_menu = controller.model.current_menu.parent
+        controller.model.view.display.frame_queue.join()
+        controller.model.view.display.sleep()
+
+        return
+
         while True:
-            if time.time() - controller.touch_current.timestamp > 1:
+            if not controller.touch_flag:
                 continue
+
+            touch_processed = False
+
             if not (
                 controller.touch_old.X
                 and controller.touch_old.Y
@@ -101,36 +86,44 @@ def main():
                 controller.touch_current.X[0],
             )
 
-            # navigate back
-            if (
-                controller.touch_current.timestamp - controller.touch_old.timestamp
-                < 100
-                and touch_point_old.x < touch_point.x
-                and model.current_menu.parent is not None
+            if not touch_processed and isinstance(
+                controller.model.current_menu, TileMenu
             ):
-                model.current_menu = model.current_menu.parent
-                continue
-
-            if isinstance(model.current_menu, TileMenu):
-                for i, touch_target in enumerate(model.current_menu.child_locations):
+                for i, touch_target in enumerate(
+                    controller.model.current_menu.child_locations
+                ):
                     if (
                         touch_target.point1 <= touch_point
                         and touch_point <= touch_target.point2
                     ):
-                        model.current_menu = model.current_menu.children[i]
+                        controller.model.current_menu = (
+                            controller.model.current_menu.children[i]
+                        )
+                        touch_processed = True
                         break
-                continue
 
-            if isinstance(model.current_menu, ListMenu):
-                for button in model.current_menu.buttons:
+            if not touch_processed and isinstance(
+                controller.model.current_menu, ListMenu
+            ):
+                for button in controller.model.current_menu.buttons:
                     touch_target = button.location
                     if (
                         touch_target.point1 <= touch_point
                         and touch_point <= touch_target.point2
                     ):
                         button.callback()
+                        touch_processed = True
                         break
-                continue
+
+            # navigate back
+            if (
+                not touch_processed
+                and touch_point_old.x < touch_point.x
+                and controller.model.current_menu.parent is not None
+            ):
+                logging.info("Controller: back swipe")
+                controller.model.current_menu = controller.model.current_menu.parent
+                touch_processed = True
 
 
 main()

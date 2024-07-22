@@ -36,347 +36,67 @@ EPD_HEIGHT = 250
 
 class EPD:
     def __init__(self):
-        self.reset_pin = epdconfig.EPD_RST_PIN
-        self.dc_pin = epdconfig.EPD_DC_PIN
         self.busy_pin = epdconfig.EPD_BUSY_PIN
         self.cs_pin = epdconfig.EPD_CS_PIN
-        self.width = EPD_WIDTH
+        self.dc_pin = epdconfig.EPD_DC_PIN
+        self.gpio_busy_pin = epdconfig.GPIO_BUSY_PIN
+        self.reset_pin = epdconfig.EPD_RST_PIN
         self.height = EPD_HEIGHT
+        self.width = EPD_WIDTH
         epdconfig.address = 0x14
 
     FULL_UPDATE = 0
     PART_UPDATE = 1
 
+    # fmt: off
     lut_partial_update = [
-        0x0,
-        0x40,
-        0x0,
-        0x0,
-        0x0,
-        0x0,
-        0x0,
-        0x0,
-        0x0,
-        0x0,
-        0x0,
-        0x0,
-        0x80,
-        0x80,
-        0x0,
-        0x0,
-        0x0,
-        0x0,
-        0x0,
-        0x0,
-        0x0,
-        0x0,
-        0x0,
-        0x0,
-        0x40,
-        0x40,
-        0x0,
-        0x0,
-        0x0,
-        0x0,
-        0x0,
-        0x0,
-        0x0,
-        0x0,
-        0x0,
-        0x0,
-        0x0,
-        0x80,
-        0x0,
-        0x0,
-        0x0,
-        0x0,
-        0x0,
-        0x0,
-        0x0,
-        0x0,
-        0x0,
-        0x0,
-        0x0,
-        0x0,
-        0x0,
-        0x0,
-        0x0,
-        0x0,
-        0x0,
-        0x0,
-        0x0,
-        0x0,
-        0x0,
-        0x0,
-        0x10,
-        0x0,
-        0x0,
-        0x0,
-        0x0,
-        0x0,
-        0x0,
-        0x1,
-        0x0,
-        0x0,
-        0x0,
-        0x0,
-        0x0,
-        0x0,
-        0x1,
-        0x0,
-        0x0,
-        0x0,
-        0x0,
-        0x0,
-        0x0,
-        0x0,
-        0x0,
-        0x0,
-        0x0,
-        0x0,
-        0x0,
-        0x0,
-        0x0,
-        0x0,
-        0x0,
-        0x0,
-        0x0,
-        0x0,
-        0x0,
-        0x0,
-        0x0,
-        0x0,
-        0x0,
-        0x0,
-        0x0,
-        0x0,
-        0x0,
-        0x0,
-        0x0,
-        0x0,
-        0x0,
-        0x0,
-        0x0,
-        0x0,
-        0x0,
-        0x0,
-        0x0,
-        0x0,
-        0x0,
-        0x0,
-        0x0,
-        0x0,
-        0x0,
-        0x0,
-        0x0,
-        0x0,
-        0x0,
-        0x0,
-        0x0,
-        0x0,
-        0x0,
-        0x0,
-        0x0,
-        0x0,
-        0x0,
-        0x0,
-        0x0,
-        0x0,
-        0x0,
-        0x0,
-        0x0,
-        0x0,
-        0x0,
-        0x0,
-        0x0,
-        0x0,
-        0x0,
-        0x0,
-        0x22,
-        0x22,
-        0x22,
-        0x22,
-        0x22,
-        0x22,
-        0x0,
-        0x0,
-        0x0,
-        0x22,
-        0x17,
-        0x41,
-        0x00,
-        0x32,
-        0x36,
+        0x0, 0x40, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0,
+        0x0, 0x0, 0x0, 0x80, 0x80, 0x0, 0x0, 0x0, 0x0,
+        0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x40, 0x40, 0x0,
+        0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0,
+        0x0, 0x80, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0,
+        0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0,
+        0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x10, 0x0, 0x0,
+        0x0, 0x0, 0x0, 0x0, 0x1, 0x0, 0x0, 0x0, 0x0,
+        0x0, 0x0, 0x1, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0,
+        0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0,
+        0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0,
+        0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0,
+        0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0,
+        0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0,
+        0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0,
+        0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0,
+        0x22, 0x22, 0x22, 0x22, 0x22, 0x22, 0x0, 0x0, 0x0,
+        0x22, 0x17, 0x41, 0x00, 0x32, 0x36,
     ]
 
     lut_full_update = [
-        0x80,
-        0x4A,
-        0x40,
-        0x0,
-        0x0,
-        0x0,
-        0x0,
-        0x0,
-        0x0,
-        0x0,
-        0x0,
-        0x0,
-        0x40,
-        0x4A,
-        0x80,
-        0x0,
-        0x0,
-        0x0,
-        0x0,
-        0x0,
-        0x0,
-        0x0,
-        0x0,
-        0x0,
-        0x80,
-        0x4A,
-        0x40,
-        0x0,
-        0x0,
-        0x0,
-        0x0,
-        0x0,
-        0x0,
-        0x0,
-        0x0,
-        0x0,
-        0x40,
-        0x4A,
-        0x80,
-        0x0,
-        0x0,
-        0x0,
-        0x0,
-        0x0,
-        0x0,
-        0x0,
-        0x0,
-        0x0,
-        0x0,
-        0x0,
-        0x0,
-        0x0,
-        0x0,
-        0x0,
-        0x0,
-        0x0,
-        0x0,
-        0x0,
-        0x0,
-        0x0,
-        0xF,
-        0x0,
-        0x0,
-        0x0,
-        0x0,
-        0x0,
-        0x0,
-        0xF,
-        0x0,
-        0x0,
-        0xF,
-        0x0,
-        0x0,
-        0x2,
-        0xF,
-        0x0,
-        0x0,
-        0x0,
-        0x0,
-        0x0,
-        0x0,
-        0x1,
-        0x0,
-        0x0,
-        0x0,
-        0x0,
-        0x0,
-        0x0,
-        0x0,
-        0x0,
-        0x0,
-        0x0,
-        0x0,
-        0x0,
-        0x0,
-        0x0,
-        0x0,
-        0x0,
-        0x0,
-        0x0,
-        0x0,
-        0x0,
-        0x0,
-        0x0,
-        0x0,
-        0x0,
-        0x0,
-        0x0,
-        0x0,
-        0x0,
-        0x0,
-        0x0,
-        0x0,
-        0x0,
-        0x0,
-        0x0,
-        0x0,
-        0x0,
-        0x0,
-        0x0,
-        0x0,
-        0x0,
-        0x0,
-        0x0,
-        0x0,
-        0x0,
-        0x0,
-        0x0,
-        0x0,
-        0x0,
-        0x0,
-        0x0,
-        0x0,
-        0x0,
-        0x0,
-        0x0,
-        0x0,
-        0x0,
-        0x0,
-        0x0,
-        0x0,
-        0x0,
-        0x0,
-        0x0,
-        0x22,
-        0x22,
-        0x22,
-        0x22,
-        0x22,
-        0x22,
-        0x0,
-        0x0,
-        0x0,
-        0x22,
-        0x17,
-        0x41,
-        0x0,
-        0x32,
-        0x36,
+        0x80, 0x4A, 0x40, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0,
+        0x0, 0x0, 0x0, 0x40, 0x4A, 0x80, 0x0, 0x0, 0x0,
+        0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x80, 0x4A, 0x40,
+        0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0,
+        0x40, 0x4A, 0x80, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0,
+        0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0,
+        0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0xF, 0x0, 0x0,
+        0x0, 0x0, 0x0, 0x0, 0xF, 0x0, 0x0, 0xF, 0x0,
+        0x0, 0x2, 0xF, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0,
+        0x1, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0,
+        0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0,
+        0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0,
+        0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0,
+        0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0,
+        0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0,
+        0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0,
+        0x22, 0x22, 0x22, 0x22, 0x22, 0x22, 0x0, 0x0, 0x0,
+        0x22, 0x17, 0x41, 0x0, 0x32, 0x36,
     ]
-
-    """
-    function :Hardware reset
-    parameter:
-    """
+    # fmt: on
 
     def reset(self):
+        """
+        function :Hardware reset
+        parameter:
+        """
         epdconfig.digital_write(self.reset_pin, 1)
         epdconfig.delay_ms(20)
         epdconfig.digital_write(self.reset_pin, 0)
@@ -384,25 +104,23 @@ class EPD:
         epdconfig.digital_write(self.reset_pin, 1)
         epdconfig.delay_ms(20)
 
-    """
-    function :send command
-    parameter:
-     command : Command register
-    """
-
     def send_command(self, command):
+        """
+        function :send command
+        parameter:
+         command : Command register
+        """
         epdconfig.digital_write(self.dc_pin, 0)
         epdconfig.digital_write(self.cs_pin, 0)
         epdconfig.spi_writebyte([command])
         epdconfig.digital_write(self.cs_pin, 1)
 
-    """
-    function :send data
-    parameter:
-     data : Write data
-    """
-
     def send_data(self, data):
+        """
+        function :send data
+        parameter:
+         data : Write data
+        """
         epdconfig.digital_write(self.dc_pin, 1)
         epdconfig.digital_write(self.cs_pin, 0)
         epdconfig.spi_writebyte([data])
@@ -414,38 +132,33 @@ class EPD:
         epdconfig.spi_writebyte(data)
         epdconfig.digital_write(self.cs_pin, 1)
 
-    """
-    function :Wait until the busy_pin goes LOW
-    parameter:
-    """
-
     def ReadBusy(self):
-        logging.debug("epd2in13_V3: e-Paper busy")
-        while epdconfig.digital_read(self.busy_pin) == 1:  # 0: idle, 1: busy
-            epdconfig.delay_ms(10)
+        """
+        function :Wait until the busy_pin goes LOW
+        parameter:
+        """
+        epdconfig.GPIO_BUSY_PIN.wait_for_press(timeout=0.001)
+        epdconfig.GPIO_BUSY_PIN.wait_for_release()
         logging.debug("epd2in13_V3: e-Paper busy release")
 
-    """
-    function : Turn On Display
-    parameter:
-    """
-
     def TurnOnDisplay(self):
+        """
+        function : Turn On Display
+        parameter:
+        """
         self.send_command(0x22)  # Display Update Control
         self.send_data(0xC7)
         self.send_command(0x20)  # Activate Display Update Sequence
         self.ReadBusy()
 
-    """
-    function : Turn On Display Part
-    parameter:
-    """
-
     def TurnOnDisplayPart(self):
+        """
+        function : Turn On Display Part
+        parameter:
+        """
         self.send_command(0x22)  # Display Update Control
         self.send_data(0x0C)  # fast:0x0c, quality:0x0f, 0xcf
         self.send_command(0x20)  # Activate Display Update Sequence
-        # self.ReadBusy()
 
     def TurnOnDisplayPart_Wait(self):
         self.send_command(0x22)  # Display Update Control
@@ -453,25 +166,23 @@ class EPD:
         self.send_command(0x20)  # Activate Display Update Sequence
         self.ReadBusy()
 
-    """
-    function : Set lut
-    parameter:
-        lut : lut data
-    """
-
     def Lut(self, lut):
+        """
+        function : Set lut
+        parameter:
+            lut : lut data
+        """
         self.send_command(0x32)
         for i in range(0, 153):
             self.send_data(lut[i])
         self.ReadBusy()
 
-    """
-    function : Send lut data and configuration
-    parameter:
-        lut : lut data
-    """
-
     def SetLut(self, lut):
+        """
+        function : Send lut data and configuration
+        parameter:
+            lut : lut data
+        """
         self.Lut(lut)
         self.send_command(0x3F)
         self.send_data(lut[153])
@@ -484,16 +195,15 @@ class EPD:
         self.send_command(0x2C)  # VCOM
         self.send_data(lut[158])
 
-    """
-    function : Setting the display window
-    parameter:
-        xstart : X-axis starting position
-        ystart : Y-axis starting position
-        xend : End position of X-axis
-        yend : End position of Y-axis
-    """
-
     def SetWindow(self, x_start, y_start, x_end, y_end):
+        """
+        function : Setting the display window
+        parameter:
+            xstart : X-axis starting position
+            ystart : Y-axis starting position
+            xend : End position of X-axis
+            yend : End position of Y-axis
+        """
         self.send_command(0x44)  # SET_RAM_X_ADDRESS_START_END_POSITION
         # x point must be the multiple of 8 or the last 3 bits will be ignored
         self.send_data((x_start >> 3) & 0xFF)
@@ -505,14 +215,13 @@ class EPD:
         self.send_data(y_end & 0xFF)
         self.send_data((y_end >> 8) & 0xFF)
 
-    """
-    function : Set Cursor
-    parameter:
-        x : X-axis starting position
-        y : Y-axis starting position
-    """
-
     def SetCursor(self, x, y):
+        """
+        function : Set Cursor
+        parameter:
+            x : X-axis starting position
+            y : Y-axis starting position
+        """
         self.send_command(0x4E)  # SET_RAM_X_ADDRESS_COUNTER
         # x point must be the multiple of 8 or the last 3 bits will be ignored
         self.send_data(x & 0xFF)
@@ -521,12 +230,11 @@ class EPD:
         self.send_data(y & 0xFF)
         self.send_data((y >> 8) & 0xFF)
 
-    """
-    function : Initialize the e-Paper register
-    parameter:
-    """
-
     def init(self, update):
+        """
+        function : Initialize the e-Paper register
+        parameter:
+        """
         if epdconfig.module_init() != 0:
             return -1
 
@@ -561,6 +269,7 @@ class EPD:
 
             self.ReadBusy()
 
+            self.send_data(0x35)
             self.SetLut(self.lut_full_update)
 
         else:
@@ -594,21 +303,15 @@ class EPD:
 
         return 0
 
-    """
-    function : Display images
-    parameter:
-        image : Image data
-    """
-
     def getbuffer(self, image):
-        img = image
-        imwidth, imheight = img.size
-        if imwidth == self.width and imheight == self.height:
-            img = img.rotate(180, expand=True).convert("1")
-        elif imwidth == self.height and imheight == self.width:
-            # image has correct dimensions, but needs to be rotated
-            img = img.rotate(270, expand=True).convert("1")
-        else:
+        """
+        function : Display images
+        parameter:
+            image : Image data
+        """
+        imwidth, imheight = image.size
+
+        if not (imwidth == self.width and imheight == self.height):
             logging.warning(
                 "Wrong image dimensions: must be "
                 + str(self.width)
@@ -618,69 +321,41 @@ class EPD:
             # return a blank buffer
             return [0x00] * (int(self.width / 8) * self.height)
 
-        buf = bytearray(img.tobytes("raw"))
+        image.convert("1")
+        buf = bytearray(image.tobytes("raw"))
         return buf
 
-    """
-    function : Sends the image buffer in RAM to e-Paper and displays
-    parameter:
-        image : Image data
-    """
-
     def display(self, image):
-        if self.width % 8 == 0:
-            linewidth = int(self.width / 8)
-        else:
-            linewidth = int(self.width / 8) + 1
-
+        """
+        function : Sends the image buffer in RAM to e-Paper and displays
+        parameter:
+            image : Image data
+        """
         self.send_command(0x24)
-        # for j in range(0, self.height):
-        # for i in range(0, linewidth):
-        # self.send_data(image[i + j * linewidth])
-
         self.send_data2(image)
         self.TurnOnDisplay()
 
-    """
-    function : Sends the image buffer in RAM to e-Paper and partial refresh
-    parameter:
-        image : Image data
-    """
-
     def displayPartial(self, image):
-        if self.width % 8 == 0:
-            linewidth = int(self.width / 8)
-        else:
-            linewidth = int(self.width / 8) + 1
-
+        """
+        function : Sends the image buffer in RAM to e-Paper and partial refresh
+        parameter:
+            image : Image data
+        """
         self.send_command(0x24)  # WRITE_RAM
-        # for j in range(0, self.height):
-        # for i in range(0, linewidth):
-        # self.send_data(image[i + j * linewidth])
         self.send_data2(image)
         self.TurnOnDisplayPart()
 
     def displayPartial_Wait(self, image):
-        if self.width % 8 == 0:
-            linewidth = int(self.width / 8)
-        else:
-            linewidth = int(self.width / 8) + 1
-
         self.send_command(0x24)  # WRITE_RAM
-        # for j in range(0, self.height):
-        # for i in range(0, linewidth):
-        # self.send_data(image[i + j * linewidth])
-
         self.send_data2(image)
         self.TurnOnDisplayPart_Wait()
 
-    """
-    function : Refresh a base image
-    parameter:
-        image : Image data
-    """
-
     def displayPartBaseImage(self, image):
+        """
+        function : Refresh a base image
+        parameter:
+            image : Image data
+        """
         if self.width % 8 == 0:
             linewidth = int(self.width / 8)
         else:
@@ -697,17 +372,15 @@ class EPD:
                 self.send_data(image[i + j * linewidth])
         self.TurnOnDisplay()
 
-    """
-    function : Clear screen
-    parameter:
-    """
-
     def Clear(self, color):
+        """
+        function : Clear screen
+        parameter:
+        """
         if self.width % 8 == 0:
             linewidth = int(self.width / 8)
         else:
             linewidth = int(self.width / 8) + 1
-        # logger.debug(linewidth)
 
         self.send_command(0x24)
         for j in range(0, self.height):
@@ -716,16 +389,13 @@ class EPD:
 
         self.TurnOnDisplay()
 
-    """
-    function : Enter sleep mode
-    parameter:
-    """
-
     def sleep(self):
+        """
+        function : Enter sleep mode
+        parameter:
+        """
         self.send_command(0x10)  # enter deep sleep
         self.send_data(0x01)
-
-        epdconfig.delay_ms(2000)
 
     def Dev_exit(self):
         epdconfig.module_exit()

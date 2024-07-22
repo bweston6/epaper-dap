@@ -71,3 +71,7 @@ class Rectangle:
     def point2(self, new_point):
         assert isinstance(new_point, Point)
         self._point2 = new_point
+
+    def contains_point(self, point):
+        assert isinstance(point, Point)
+        return point >= self.point1 and point <= self.point2
