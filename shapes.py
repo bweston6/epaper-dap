@@ -33,15 +33,35 @@ class Point:
     def tuple(self, other):
         self.x, self.y = other
 
+    def __lt__(self, other):
+        if not isinstance(other, Point):
+            return NotImplemented
+        return self.x < other.x and self.y < other.y
+
+    def __le__(self, other):
+        if not isinstance(other, Point):
+            return NotImplemented
+        return self.x <= other.x and self.y <= other.y
+
     def __eq__(self, other):
         if not isinstance(other, Point):
             return NotImplemented
         return self.tuple == other.tuple
 
-    def __lt__(self, other):
+    def __ne__(self, other):
         if not isinstance(other, Point):
             return NotImplemented
-        return self.x < other.x and self.y < other.y
+        return self.x != other.x or self.y != other.y
+
+    def __gt__(self, other):
+        if not isinstance(other, Point):
+            return NotImplemented
+        return self.x > other.x and self.y > other.y
+
+    def __ge__(self, other):
+        if not isinstance(other, Point):
+            return NotImplemented
+        return self.x >= other.x and self.y >= other.y
 
     def __str__(self):
         return f"{type(self)} ({self.x}, {self.y})"

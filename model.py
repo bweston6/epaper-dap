@@ -1,6 +1,8 @@
+import subprocess
+import logging
+
 from menu import Menu, ListMenu, TileMenu, MenuItem
 from shapes import Point, Rectangle
-import logging
 
 
 class Model:
@@ -34,6 +36,11 @@ class Model:
                             value=str(self.invert),
                             callback=self.invert_callback,
                         ),
+                        MenuItem(
+                            name="Shutdown",
+                            value="shutdown now",
+                            callback=self.shutdown_callback,
+                        ),
                     ]
                 ),
                 TileMenu(model=self, name="Now Playing"),
@@ -63,3 +70,6 @@ class Model:
     def invert_callback(self):
         self.invert = not self.invert
         self.view.render_menu(self.current_menu, invert=self.invert)
+
+    def shutdown_callback(self):
+        subprocess.call(["sudo", "shutdown", "now"])

@@ -35,7 +35,6 @@ class Display:
 
         self.worker = threading.Thread(
             target=self._worker,
-            daemon=True,
         ).start()
 
     @property

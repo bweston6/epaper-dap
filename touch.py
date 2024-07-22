@@ -2,8 +2,10 @@ import copy
 import threading
 import time
 
-from shapes import Point, Rectangle
+from TP_lib import epd2in13_V3
 from TP_lib import gt1151
+
+from shapes import Point, Rectangle
 
 
 class TouchEvent:
@@ -47,6 +49,7 @@ class Touch:
         self.touch_event_start_callback = touch_event_start_callback
         self.touch_event_tap_end_callback = touch_event_tap_end_callback
 
+        epd2in13_V3.EPD().reset()
         self.gt = gt1151.GT1151()
         self.gt.GT_Init()
         self.gt_touch = gt1151.GT_Development()
@@ -54,14 +57,29 @@ class Touch:
         # touch interrupt handler
         self.interrupt_handler = threading.Thread(
             target=self._interrupt_handler,
-            daemon=True,
         ).start()
 
         # touch event update watchdog
         self.current_touch_event_worker = threading.Thread(
             target=self._current_touch_event_worker,
-            daemon=True,
         ).start()
+
+    def __enter__(self):
+        return self
+
+    def __exit__(self, exc_type, exc_value, traceback):
+        self.active_flag = False
+
+    def __del__(self):
+        self.active_flag = False
+
+    @property
+    def rotate(self):
+        return self._rotate
+
+    @rotate.setter
+    def rotate(self, other):
+        self._rotate = other % 360
 
     def _current_touch_event_worker(self):
         while self.active_flag:
@@ -124,9 +142,10 @@ class Touch:
             s = self.gt_touch.S[0]
             half_s = s / 2
 
-            touch_point = Point(x, y)
+            touch_point = transpose_point(Point(x, y), self.rotate)
             touch_area = Rectangle(
-                Point(x - half_s, y - half_s), Point(x + half_s, y + half_s)
+                Point(touch_point.x - half_s, touch_point.y - half_s),
+                Point(touch_point.x + half_s, touch_point.y + half_s),
             )
 
             # lock touch event for r/w
@@ -160,3 +179,33 @@ def is_gesture(touch_event):
         if not touch_event.touch_areas[0].contains_point(touch_point):
             return True
     return False
+
+
+def transpose_point(point, deg):
+    """
+    Rotate a point in 90 degree increments based on the display dimensions
+
+    The touch matrix is upside down relative to the native display orientation
+    """
+    match deg:
+        case 0:
+            return Point(
+                epd2in13_V3.EPD_WIDTH - point.x,
+                epd2in13_V3.EPD_HEIGHT - point.y,
+            )
+        case 90:
+            return Point(
+                epd2in13_V3.EPD_HEIGHT - point.y,
+                point.x,
+            )
+        case 180:
+            return point
+        case 270:
+            return Point(
+                point.y,
+                epd2in13_V3.EPD_WIDTH - point.x,
+            )
+        case _:
+            raise Exception(
+                "Invalid rotation, only increments of 90 deg are permitted",
+            )

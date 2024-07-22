@@ -2,9 +2,7 @@ import logging
 
 from menu import TileMenu, ListMenu
 from model import Model
-from shapes import Point
 from touch import Touch
-from TP_lib import epd2in13_V3
 from view import View
 
 logging.basicConfig(level=logging.INFO)
@@ -12,12 +10,13 @@ logging.basicConfig(level=logging.INFO)
 
 class Controller:
     def __init__(self):
-        self.touch_flag = False
-        self.poll_touch = True
-
         self.view = View()
         self.model = Model(self.view)
-        self.touch = Touch()
+        self.touch = Touch(
+            rotate=90,
+            touch_event_gesture_end_callback=self.gesture_handler,
+            touch_event_tap_end_callback=self.tap_handler,
+        )
 
     def __enter__(self):
         return self
@@ -28,14 +27,44 @@ class Controller:
         del self.model
         del self.view
 
-    def print_peripherals(self, peripherals):
-        print("printing peripherals:")
-        for peripheral in peripherals.values():
-            if type(peripheral.rssi) is int and peripheral.rssi < -80:
-                continue
-            print(peripheral)
-        print("\n")
+    def tap_handler(self, touch_event):
+        if isinstance(self.model.current_menu, TileMenu):
+            self.tile_menu_controller(touch_event)
+            return
+        if isinstance(self.model.current_menu, ListMenu):
+            self.list_menu_controller(touch_event)
+            return
 
+    def gesture_handler(self, touch_event):
+        if (
+            touch_event.touch_points[0].x < touch_event.touch_points[-1].x
+            and self.model.current_menu.parent is not None
+        ):
+            logging.info("Controller: back swipe")
+            self.model.current_menu = self.model.current_menu.parent
+
+    def tile_menu_controller(self, touch_event):
+        for i, touch_target in enumerate(
+            self.model.current_menu.child_locations,
+        ):
+            if touch_target.contains_point(touch_event.touch_points[0]):
+                self.model.current_menu = self.model.current_menu.children[i]
+                return
+
+    def list_menu_controller(self, touch_event):
+        for button in self.model.current_menu.buttons:
+            if button.location.contains_point(touch_event.touch_points[0]):
+                button.callback()
+                return
+
+    # def print_peripherals(self, peripherals):
+    #     print("printing peripherals:")
+    #     for peripheral in peripherals.values():
+    #         if type(peripheral.rssi) is int and peripheral.rssi < -80:
+    #             continue
+    #         print(peripheral)
+    #     print("\n")
+    #
     # def scan_pair_and_connect(self):
     #     bluetoothctl.Power.on()
     #     scan = bluetoothctl.Scan()
@@ -47,83 +76,4 @@ class Controller:
     #     device.connect()
 
 
-def main():
-    with Controller() as controller:
-        controller.model.current_menu = controller.model.current_menu.children[4]
-        controller.model.current_menu.buttons[2].callback()
-        controller.model.current_menu.buttons[1].callback()
-        controller.model.current_menu.buttons[1].callback()
-        controller.model.current_menu.buttons[0].callback()
-        controller.model.current_menu = controller.model.current_menu.parent
-        controller.model.view.display.frame_queue.join()
-        controller.model.view.display.sleep()
-
-        return
-
-        while True:
-            if not controller.touch_flag:
-                continue
-
-            touch_processed = False
-
-            if not (
-                controller.touch_old.X
-                and controller.touch_old.Y
-                and controller.touch_old.S
-                and controller.touch_current.X
-                and controller.touch_current.Y
-                and controller.touch_current.S
-            ):
-                continue
-
-            # rotate 90 deg
-            touch_point_old = Point(
-                epd2in13_V3.EPD_HEIGHT - controller.touch_old.Y[0],
-                controller.touch_old.X[0],
-            )
-            touch_point = Point(
-                epd2in13_V3.EPD_HEIGHT - controller.touch_current.Y[0],
-                controller.touch_current.X[0],
-            )
-
-            if not touch_processed and isinstance(
-                controller.model.current_menu, TileMenu
-            ):
-                for i, touch_target in enumerate(
-                    controller.model.current_menu.child_locations
-                ):
-                    if (
-                        touch_target.point1 <= touch_point
-                        and touch_point <= touch_target.point2
-                    ):
-                        controller.model.current_menu = (
-                            controller.model.current_menu.children[i]
-                        )
-                        touch_processed = True
-                        break
-
-            if not touch_processed and isinstance(
-                controller.model.current_menu, ListMenu
-            ):
-                for button in controller.model.current_menu.buttons:
-                    touch_target = button.location
-                    if (
-                        touch_target.point1 <= touch_point
-                        and touch_point <= touch_target.point2
-                    ):
-                        button.callback()
-                        touch_processed = True
-                        break
-
-            # navigate back
-            if (
-                not touch_processed
-                and touch_point_old.x < touch_point.x
-                and controller.model.current_menu.parent is not None
-            ):
-                logging.info("Controller: back swipe")
-                controller.model.current_menu = controller.model.current_menu.parent
-                touch_processed = True
-
-
-main()
+Controller()
