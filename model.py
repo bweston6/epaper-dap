@@ -1,6 +1,7 @@
 import logging
 
 from menu import Menu, ListMenu, TileMenu, MenuItem
+from menu_bluetooth import BluetoothMenu
 from shapes import Point, Rectangle
 from model_settings import Settings
 
@@ -30,7 +31,7 @@ class Model:
                     background_bitmap="menu_settings.bmp",
                 ).add_children(
                     [
-                        ListMenu(
+                        BluetoothMenu(
                             model=self,
                             name="Bluetooth",
                             background_bitmap="menu_settings_bluetooth.bmp",

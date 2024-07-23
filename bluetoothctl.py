@@ -57,14 +57,16 @@ class _Discover(threading.Thread):
         matches = re.finditer(regex, strip_ansi(result.stdout), re.MULTILINE)
         for match in matches:
             if match.group("uuid") in self.peripherals:
-                self.peripherals[match.group("uuid")].name = match.group("name")
+                self.peripherals[match.group(
+                    "uuid")].name = match.group("name")
 
         # Update RSSI
         regex = r"CHG.*Device (?P<uuid>[A-F\d:]{17}) RSSI:.*?\(?(?P<rssi>-?\d+)\)?$"
         matches = re.finditer(regex, strip_ansi(result.stdout), re.MULTILINE)
         for match in matches:
             if match.group("uuid") in self.peripherals:
-                self.peripherals[match.group("uuid")].rssi = match.group("rssi")
+                self.peripherals[match.group(
+                    "uuid")].rssi = match.group("rssi")
 
         # Delete removed devices
         regex = r"DEL.*Device (?P<uuid>[A-F\d:]{17})"
@@ -84,20 +86,25 @@ class Scan:
         self.discover = _Discover(callback)
         self.discover.start()
 
-    def scan_off(self):
+    def scan_off(self, block=False):
         self.discover.scanning = False
-        self.discover.join()
+        if block:
+            self.discover.join()
+        subprocess.run(
+            ["bluetoothctl", "scan", "off"],
+            stdout=subprocess.DEVNULL,
+        )
 
 
 class Power:
-    def on():
+    def on(self):
         subprocess.run(
             ["bluetoothctl", "power", "on"],
             check=True,
             stdout=subprocess.DEVNULL,
         )
 
-    def off():
+    def off(self):
         subprocess.run(
             ["bluetoothctl", "power", "off"],
             check=True,
@@ -106,7 +113,7 @@ class Power:
 
 
 class Device:
-    def __init__(self, uuid):
+    def __init__(self, uuid=None):
         self.uuid = uuid
 
     def _get_paired_devices(self):
@@ -126,6 +133,24 @@ class Device:
             paired_devices.append(match.group("uuid"))
 
         return paired_devices
+
+    def _get_connected_devices(self):
+        connected_devices = []
+
+        result = subprocess.run(
+            ["bluetoothctl", "devices", "Connected"],
+            capture_output=True,
+            check=True,
+            text=True,
+        )
+
+        # Add new devices to dictionary
+        regex = r"Device (?P<uuid>[A-F\d:]{17}) (?P<name>.*)"
+        matches = re.finditer(regex, strip_ansi(result.stdout), re.MULTILINE)
+        for match in matches:
+            connected_devices.append(match.group("uuid"))
+
+        return connected_devices
 
     def pair(self):
         paired_devices = self._get_paired_devices()

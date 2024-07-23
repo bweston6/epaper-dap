@@ -43,6 +43,12 @@ class Menu(metaclass=ABCMeta):
     def callback(self):
         self.model.current_menu = self
 
+    def get_children_as_list(self):
+        if type(self.children) is dict:
+            return list(self.children.values())
+        if type(self.children) is list:
+            return self.children
+
 
 class ListMenu(Menu):
     def __init__(
@@ -67,7 +73,7 @@ class ListMenu(Menu):
         self.selected_child = selected_child
 
         if self.selected_child is None and self.children:
-            self.selected_child = self.children[0]
+            self.selected_child = self.get_children_as_list()[0]
 
         self.buttons = [
             Button(
@@ -108,17 +114,23 @@ class ListMenu(Menu):
 
     def select_next(self):
         logging.info("Menu: select_next")
-        next_child_index = self.children.index(self.selected_child) + 1
-        self.selected_child = self.children[
-            min(next_child_index, len(self.children) - 1)
+        children = self.get_children_as_list()
+        next_child_index = children.index(self.selected_child) + 1
+        self.selected_child = children[
+            min(next_child_index, len(children) - 1)
         ]
 
     def select_previous(self):
+        if len(self.children) == 0:
+            return
         logging.info("Menu: select_previous")
-        prev_child_index = self.children.index(self.selected_child) - 1
-        self.selected_child = self.children[max(prev_child_index, 0)]
+        children = self.get_children_as_list()
+        prev_child_index = children.index(self.selected_child) - 1
+        self.selected_child = children[max(prev_child_index, 0)]
 
     def selected_child_callback(self):
+        if self.selected_child is None:
+            return
         logging.info(f"Menu: calling callback for {str(self.selected_child)}")
         self.selected_child.callback()
         return

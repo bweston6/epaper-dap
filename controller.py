@@ -42,6 +42,11 @@ class Controller:
             and self.model.current_menu.parent is not None
         ):
             logging.info("Controller: back swipe")
+            try:
+                # cleanup if function exists
+                self.model.current_menu.cleanup()
+            except AttributeError:
+                pass
             self.model.current_menu = self.model.current_menu.parent
 
     def tile_menu_controller(self, touch_event):
@@ -57,24 +62,6 @@ class Controller:
             if button.location.contains_point(touch_event.touch_points[0]):
                 button.callback()
                 return
-
-    # def print_peripherals(self, peripherals):
-    #     print("printing peripherals:")
-    #     for peripheral in peripherals.values():
-    #         if type(peripheral.rssi) is int and peripheral.rssi < -80:
-    #             continue
-    #         print(peripheral)
-    #     print("\n")
-    #
-    # def scan_pair_and_connect(self):
-    #     bluetoothctl.Power.on()
-    #     scan = bluetoothctl.Scan()
-    #     scan.scan_on(self.print_peripherals)
-    #     scan.scan_off()
-    #     uuid = "0C:C4:13:01:CF:59"
-    #     device = bluetoothctl.Device(uuid)
-    #     device.pair()
-    #     device.connect()
 
 
 controller = Controller()

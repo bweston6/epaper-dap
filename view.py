@@ -9,7 +9,8 @@ from menu import ListMenu, TileMenu, MenuItem
 class View:
     def __init__(self):
         self.display = Display(rotate=90)
-        self.bitmaps_dir = (Path(__file__).parent / "./assets/bitmaps").resolve()
+        self.bitmaps_dir = (Path(__file__).parent /
+                            "./assets/bitmaps").resolve()
         self.fonts_dir = (Path(__file__).parent / "./assets/fonts").resolve()
 
     def render_listmenu(self, menu, partial_refresh=False):
@@ -32,17 +33,25 @@ class View:
             size=SMALL_FONT_SIZE,
         )
 
-        bitmap = Image.open((self.bitmaps_dir / menu.background_bitmap).resolve())
+        bitmap = Image.open(
+            (self.bitmaps_dir / menu.background_bitmap).resolve())
         drawing = ImageDraw.Draw(bitmap)
 
-        start_child_index = max(
-            0,
-            menu.children.index(menu.selected_child) - MAX_DISPLAY_ITEMS - 1,
-        )
+        children = menu.get_children_as_list()
+
+        try:
+            start_child_index = max(
+                0,
+                children.index(menu.selected_child) - MAX_DISPLAY_ITEMS + 2,
+            )
+        except ValueError:
+            # if there are no children then default to 0
+            start_child_index = 0
+
         end_child_index = start_child_index + MAX_DISPLAY_ITEMS
 
         for i, child in enumerate(
-            menu.children[start_child_index:end_child_index],
+            children[start_child_index:end_child_index],
         ):
             font_color = BLACK
 
