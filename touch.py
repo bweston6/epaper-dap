@@ -37,7 +37,6 @@ class Touch:
         touch_event_gesture_end_callback=None,
         touch_event_tap_end_callback=None,
     ):
-        self.active_flag = True
         self.current_touch_event = None
         self.current_touch_event_watchdog = None
         self.new_touch_point_callback = new_touch_point_callback
@@ -57,21 +56,16 @@ class Touch:
         # touch interrupt handler
         self.interrupt_handler = threading.Thread(
             target=self._interrupt_handler,
-        ).start()
+            daemon=True,
+        )
+        self.interrupt_handler.start()
 
         # touch event update watchdog
         self.current_touch_event_worker = threading.Thread(
             target=self._current_touch_event_worker,
-        ).start()
-
-    def __enter__(self):
-        return self
-
-    def __exit__(self, exc_type, exc_value, traceback):
-        self.active_flag = False
-
-    def __del__(self):
-        self.active_flag = False
+            daemon=True,
+        )
+        self.current_touch_event_worker.start()
 
     @property
     def rotate(self):
@@ -82,7 +76,7 @@ class Touch:
         self._rotate = other % 360
 
     def _current_touch_event_worker(self):
-        while self.active_flag:
+        while True:
             # wait for new touch_point
             self.new_touch_point_event.wait()
             self.new_touch_point_event.clear()
@@ -124,7 +118,7 @@ class Touch:
         self.touch_event_lock.release()
 
     def _interrupt_handler(self):
-        while self.active_flag:
+        while True:
             # wait for interrupt
             self.gt.GPIO_INT.wait_for_release()
 

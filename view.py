@@ -11,19 +11,6 @@ class View:
         self.display = Display(rotate=90)
         self.bitmaps_dir = (Path(__file__).parent / "./assets/bitmaps").resolve()
         self.fonts_dir = (Path(__file__).parent / "./assets/fonts").resolve()
-        self.invert = False
-
-    def __enter__(self):
-        return self
-
-    def __exit__(self, exc_type, exc_value, traceback):
-        self._close_resources()
-
-    def __del__(self):
-        self._close_resources()
-
-    def _close_resources(self):
-        del self.display
 
     def render_listmenu(self, menu, partial_refresh=False):
         FIRST_ITEM_BASELINE = 41
@@ -79,8 +66,17 @@ class View:
                 anchor="ls",
             )
 
-            # draw value for MenuItems
-            if isinstance(child, MenuItem):
+            # draw value for MenuItems (calling value callback)
+            if isinstance(child, MenuItem) and callable(child.value):
+                drawing.text(
+                    (193, FIRST_ITEM_BASELINE + LINE_HEIGHT * i),
+                    child.value(),
+                    fill=font_color,
+                    font=font_small,
+                    anchor="rs",
+                )
+
+            if isinstance(child, MenuItem) and not callable(child.value):
                 drawing.text(
                     (193, FIRST_ITEM_BASELINE + LINE_HEIGHT * i),
                     child.value,

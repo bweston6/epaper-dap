@@ -1,7 +1,9 @@
+import logging
 import queue
 import threading
 
 from PIL import Image
+import safe_exit
 
 from TP_lib import epd2in13_V3
 
@@ -26,7 +28,6 @@ class Display:
         self.current_mode = None
         self.first_refresh_flag = True
         self.sleep_flag = True
-        self.worker_flag = True
 
         self.frame_queue = queue.Queue()
         self.epd = epd2in13_V3.EPD()
@@ -35,7 +36,11 @@ class Display:
 
         self.worker = threading.Thread(
             target=self._worker,
-        ).start()
+            daemon=True,
+        )
+        self.worker.start()
+
+        safe_exit.register(self.cleanup)
 
     @property
     def rotate(self):
@@ -45,19 +50,10 @@ class Display:
     def rotate(self, other):
         self._rotate = other % 360
 
-    def __enter__(self):
-        return self
-
-    def __exit__(self, exc_type, exc_value, traceback):
-        self._close_resources()
-
-    def __del__(self):
-        self._close_resources()
-
-    def _close_resources(self):
+    def cleanup(self):
+        print("Display: cleaning up")
+        logging.debug("Display: flushing frame_queue")
         self.frame_queue.join()
-        self.worker_flag = False
-        self.worker.join()
         self.epd.sleep()
         self.epd.Dev_exit()
 
@@ -79,7 +75,7 @@ class Display:
             self.frame_queue.join()
 
     def _worker(self):
-        while self.worker_flag:
+        while True:
             # wait until frame is in the queue
             frame = self.frame_queue.get(block=True)
 

@@ -98,7 +98,7 @@ class ListMenu(Menu):
         if self is self.model.current_menu:
             logging.info(f"Menu: select {str(self.selected_child)}")
             self.model.view.render_menu(
-                self.model.current_menu, invert=self.model.invert
+                self.model.current_menu, invert=self.model.settings.invert
             )
 
     def add_child(self, child):

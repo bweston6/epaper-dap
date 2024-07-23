@@ -1,16 +1,20 @@
-import subprocess
 import logging
 
 from menu import Menu, ListMenu, TileMenu, MenuItem
 from shapes import Point, Rectangle
+from model_settings import Settings
 
 
 class Model:
     def __init__(self, view):
+        # vars
         self.view = view
         self.current_menu = None
-        self.invert = False
 
+        # sub-models
+        self.settings = Settings(self)
+
+        # menu tree
         self.root_menu = TileMenu(
             model=self, name="Main Menu", background_bitmap="menu_main.bmp"
         )
@@ -32,14 +36,14 @@ class Model:
                             background_bitmap="menu_settings_bluetooth.bmp",
                         ),
                         MenuItem(
-                            name="Invert",
-                            value=str(self.invert),
-                            callback=self.invert_callback,
+                            name="Theme",
+                            value=self.settings.invert_value_callback,
+                            callback=self.settings.invert_callback,
                         ),
                         MenuItem(
                             name="Shutdown",
                             value="shutdown now",
-                            callback=self.shutdown_callback,
+                            callback=self.settings.shutdown_callback,
                         ),
                     ]
                 ),
@@ -65,11 +69,7 @@ class Model:
         self._current_menu = other
         if isinstance(other, Menu):
             logging.info(f"Model: navigate to {str(self.current_menu)}")
-            self.view.render_menu(self.current_menu, invert=self.invert)
-
-    def invert_callback(self):
-        self.invert = not self.invert
-        self.view.render_menu(self.current_menu, invert=self.invert)
-
-    def shutdown_callback(self):
-        subprocess.call(["sudo", "shutdown", "now"])
+            self.view.render_menu(
+                self.current_menu,
+                invert=self.settings.invert,
+            )

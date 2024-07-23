@@ -1,11 +1,14 @@
+import threading
 import logging
+
+import safe_exit
 
 from menu import TileMenu, ListMenu
 from model import Model
 from touch import Touch
 from view import View
 
-logging.basicConfig(level=logging.INFO)
+logging.basicConfig(level=logging.DEBUG)
 
 
 class Controller:
@@ -17,15 +20,13 @@ class Controller:
             touch_event_gesture_end_callback=self.gesture_handler,
             touch_event_tap_end_callback=self.tap_handler,
         )
+        self.exit_event = threading.Event()
 
-    def __enter__(self):
-        return self
+        safe_exit.register(self.cleanup)
 
-    def __exit__(self, exc_type, exc_value, traceback):
+    def cleanup(self):
         print("Controller: cleaning up")
-        # shutdown display
-        del self.model
-        del self.view
+        self.exit_event.set()
 
     def tap_handler(self, touch_event):
         if isinstance(self.model.current_menu, TileMenu):
@@ -76,4 +77,6 @@ class Controller:
     #     device.connect()
 
 
-Controller()
+controller = Controller()
+controller.exit_event.wait()
+print("Goodbye!")

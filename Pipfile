@@ -13,5 +13,6 @@ spidev = "*"
 strip-ansi = "*"
 "rpi.gpio" = "*"
 numpy = "*"
+safe-exit = "*"
 
 [dev-packages]
