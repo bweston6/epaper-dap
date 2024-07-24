@@ -43,8 +43,13 @@ class Model:
                         ),
                         MenuItem(
                             name="Shutdown",
-                            value="shutdown now",
+                            value="sudo shutdown now",
                             callback=self.settings.shutdown_callback,
+                        ),
+                        MenuItem(
+                            name="Reboot",
+                            value="sudo reboot",
+                            callback=self.settings.reboot_callback,
                         ),
                     ]
                 ),

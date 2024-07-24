@@ -16,3 +16,6 @@ class Settings:
 
     def shutdown_callback(self):
         subprocess.call(["sudo", "shutdown", "now"])
+
+    def reboot_callback(self):
+        subprocess.call(["sudo", "reboot"])
