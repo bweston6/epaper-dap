@@ -6,6 +6,8 @@ import safe_exit
 from menu import ListMenu, MenuItem
 import bluetoothctl
 
+logger = logging.getLogger(__name__)
+
 
 class BluetoothMenu(ListMenu):
     def __init__(
@@ -33,7 +35,7 @@ class BluetoothMenu(ListMenu):
         safe_exit.register(self.cleanup)
 
     def cleanup(self):
-        print("BluetoothMenu: cleaning up")
+        logging.info("cleaning up")
         if self.scan.discover and self.scan.discover.scanning:
             self.scan.scan_off()
 
@@ -55,11 +57,10 @@ class BluetoothMenu(ListMenu):
     def add_connected_devices_to_children(self):
         connected_devices = bluetoothctl.Device()._get_connected_devices()
         for device in connected_devices:
-            self.children[device] = MenuItem(
-                device, "disconnect", self.disconnect)
+            self.children[device] = MenuItem(device, "disconnect", self.disconnect)
 
     def update_children(self, peripherals):
-        logging.debug("BluetoothMenu: updating peripherals")
+        logger.debug("updating peripherals")
         update_flag = False
         selected_child_index = None
 
@@ -132,7 +133,7 @@ class BluetoothMenu(ListMenu):
 
     def connect(self):
         uuid = self.get_selected_child_uuid()
-        logging.info(f"BluetoothMenu: connect to {uuid}")
+        logger.info(f"connect to {uuid}")
         device = bluetoothctl.Device(uuid)
         device.connect()
 
@@ -141,7 +142,7 @@ class BluetoothMenu(ListMenu):
 
     def pair(self):
         uuid = self.get_selected_child_uuid()
-        logging.info(f"BluetoothMenu: pair to {uuid}")
+        logger.info(f"pair to {uuid}")
         device = bluetoothctl.Device(uuid)
         device.pair()
         device.connect()

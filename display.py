@@ -7,6 +7,8 @@ import safe_exit
 
 from TP_lib import epd2in13_V3
 
+logger = logging.getLogger(__name__)
+
 
 class Frame:
     def __init__(self, image, update_mode):
@@ -15,6 +17,8 @@ class Frame:
 
 
 class Display:
+
+    SLEEP_TIMEOUT = 5  # seconds
 
     def __init__(self, rotate=0):
         self.rotate = rotate
@@ -28,6 +32,8 @@ class Display:
         self.current_mode = None
         self.first_refresh_flag = True
         self.sleep_flag = True
+        self.sleep_flag_lock = threading.Lock()
+        self.sleep_watchdog = None
 
         self.frame_queue = queue.Queue()
         self.epd = epd2in13_V3.EPD()
@@ -51,8 +57,8 @@ class Display:
         self._rotate = other % 360
 
     def cleanup(self):
-        print("Display: cleaning up")
-        logging.debug("Display: flushing frame_queue")
+        logger.info("cleaning up")
+        logger.debug("flushing frame_queue")
         self.frame_queue.join()
         self.epd.sleep()
         self.epd.Dev_exit()
@@ -79,23 +85,40 @@ class Display:
             # wait until frame is in the queue
             frame = self.frame_queue.get(block=True)
 
+            if self.sleep_watchdog:
+                self.sleep_watchdog.cancel()
+
             if self.first_refresh_flag:
                 frame.update_mode = self.FULL_UPDATE
                 self.first_refresh_flag = False
 
+            self.sleep_flag_lock.acquire()
             if frame.update_mode == self.FULL_UPDATE:
-                print("full update")
+                logger.debug("full update")
                 if self.sleep_flag or self.current_mode != self.FULL_UPDATE:
                     self.epd.init(self.FULL_UPDATE)
                     self.current_mode = self.FULL_UPDATE
                     self.sleep_flag = False
                 self.epd.displayPartBaseImage(self.epd.getbuffer(frame.image))
             elif frame.update_mode == self.PARTIAL_UPDATE:
-                print("partial update")
+                logger.debug("partial update")
                 if self.sleep_flag or self.current_mode != self.PARTIAL_UPDATE:
                     self.epd.init(self.PARTIAL_UPDATE)
                     self.current_mode = self.PARTIAL_UPDATE
                     self.sleep_flag = False
                 self.epd.displayPartial_Wait(self.epd.getbuffer(frame.image))
+            self.sleep_flag_lock.release()
+
+            self.sleep_watchdog = threading.Timer(
+                self.SLEEP_TIMEOUT, self._sleep_watchdog
+            )
+            self.sleep_watchdog.start()
 
             self.frame_queue.task_done()
+
+    def _sleep_watchdog(self):
+        self.sleep_flag_lock.acquire()
+        self.epd.sleep()
+        self.sleep_flag = True
+        self.sleep_flag_lock.release()
+        logger.info("EPD entered deep sleep")

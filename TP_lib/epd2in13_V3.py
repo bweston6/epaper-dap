@@ -29,6 +29,8 @@
 from . import epdconfig
 import logging
 
+logger = logging.getLogger(__name__)
+
 # Display resolution
 EPD_WIDTH = 122
 EPD_HEIGHT = 250
@@ -139,7 +141,7 @@ class EPD:
         """
         epdconfig.GPIO_BUSY_PIN.wait_for_press(timeout=0.001)
         epdconfig.GPIO_BUSY_PIN.wait_for_release()
-        logging.debug("epd2in13_V3: e-Paper busy release")
+        logger.debug("e-Paper busy release")
 
     def TurnOnDisplay(self):
         """
@@ -312,7 +314,7 @@ class EPD:
         imwidth, imheight = image.size
 
         if not (imwidth == self.width and imheight == self.height):
-            logging.warning(
+            logger.warning(
                 "Wrong image dimensions: must be "
                 + str(self.width)
                 + "x"

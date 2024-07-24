@@ -5,6 +5,8 @@ from menu_bluetooth import BluetoothMenu
 from shapes import Point, Rectangle
 from model_settings import Settings
 
+logger = logging.getLogger(__name__)
+
 
 class Model:
     def __init__(self, view):
@@ -74,7 +76,7 @@ class Model:
     def current_menu(self, other):
         self._current_menu = other
         if isinstance(other, Menu):
-            logging.info(f"Model: navigate to {str(self.current_menu)}")
+            logger.info(f"navigate to {str(self.current_menu)}")
             self.view.render_menu(
                 self.current_menu,
                 invert=self.settings.invert,

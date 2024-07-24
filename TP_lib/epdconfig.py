@@ -32,6 +32,8 @@ import logging
 import spidev
 import time
 
+logger = logging.getLogger(__name__)
+
 # e-Paper
 EPD_RST_PIN = 17
 EPD_DC_PIN = 25
@@ -119,12 +121,12 @@ def module_init():
 def module_exit():
     spi.close()
     bus.close()
-    logging.debug("epdconfig: spi end")
+    logger.debug("spi end")
 
     GPIO_RST_PIN.off()
     GPIO_DC_PIN.off()
     GPIO_TRST.off()
-    logging.debug("epdconfig: close 5V, Module enters 0 power consumption ...")
+    logger.debug("close 5V, Module enters 0 power consumption")
 
     GPIO_RST_PIN.close()
     GPIO_DC_PIN.close()

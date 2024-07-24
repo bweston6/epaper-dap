@@ -1,4 +1,8 @@
+import logging
+
 from . import epdconfig
+
+logger = logging.getLogger(__name__)
 
 MAX_INPUTS = 5
 
@@ -47,7 +51,7 @@ class GT1151:
 
     def GT_ReadVersion(self):
         buf = self.GT_Read(0x8140, 4)
-        print(f"gt1151 version: {buf}")
+        logger.debug(f"gt1151 version: {buf}")
 
     def GT_Init(self):
         if epdconfig.module_init() != 0:

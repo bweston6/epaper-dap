@@ -8,7 +8,9 @@ from model import Model
 from touch import Touch
 from view import View
 
-logging.basicConfig(level=logging.DEBUG)
+logging.basicConfig(level=logging.INFO)
+# logging.basicConfig(level=logging.DEBUG)
+logger = logging.getLogger(__name__)
 
 
 class Controller:
@@ -25,7 +27,7 @@ class Controller:
         safe_exit.register(self.cleanup)
 
     def cleanup(self):
-        print("Controller: cleaning up")
+        logger.info("cleaning up")
         self.exit_event.set()
 
     def tap_handler(self, touch_event):
@@ -41,7 +43,7 @@ class Controller:
             touch_event.touch_points[0].x < touch_event.touch_points[-1].x
             and self.model.current_menu.parent is not None
         ):
-            logging.info("Controller: back swipe")
+            logger.info("back swipe")
             try:
                 # cleanup if function exists
                 self.model.current_menu.cleanup()
@@ -66,4 +68,4 @@ class Controller:
 
 controller = Controller()
 controller.exit_event.wait()
-print("Goodbye!")
+logger.info("Goodbye!")

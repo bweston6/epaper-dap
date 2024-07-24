@@ -5,9 +5,11 @@ import logging
 
 from shapes import Rectangle, Point
 
+logger = logging.getLogger(__name__)
+
 
 def _default_callback():
-    logging.warning("MenuItem: callback not implemented")
+    logger.warning("callback not implemented")
 
 
 class Menu(metaclass=ABCMeta):
@@ -102,7 +104,7 @@ class ListMenu(Menu):
         assert isinstance(other, (NoneType, Menu, MenuItem))
         self._selected_child = other
         if self is self.model.current_menu:
-            logging.info(f"Menu: select {str(self.selected_child)}")
+            logger.info(f"select {str(self.selected_child)}")
             self.model.view.render_menu(
                 self.model.current_menu, invert=self.model.settings.invert
             )
@@ -113,17 +115,15 @@ class ListMenu(Menu):
             self.selected_child = self.children[0]
 
     def select_next(self):
-        logging.info("Menu: select_next")
+        logger.info("select_next")
         children = self.get_children_as_list()
         next_child_index = children.index(self.selected_child) + 1
-        self.selected_child = children[
-            min(next_child_index, len(children) - 1)
-        ]
+        self.selected_child = children[min(next_child_index, len(children) - 1)]
 
     def select_previous(self):
         if len(self.children) == 0:
             return
-        logging.info("Menu: select_previous")
+        logger.info("select_previous")
         children = self.get_children_as_list()
         prev_child_index = children.index(self.selected_child) - 1
         self.selected_child = children[max(prev_child_index, 0)]
@@ -131,7 +131,7 @@ class ListMenu(Menu):
     def selected_child_callback(self):
         if self.selected_child is None:
             return
-        logging.info(f"Menu: calling callback for {str(self.selected_child)}")
+        logger.info(f"calling callback for {str(self.selected_child)}")
         self.selected_child.callback()
         return
 
