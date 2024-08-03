@@ -14,5 +14,6 @@ strip-ansi = "*"
 "rpi.gpio" = "*"
 numpy = "*"
 safe-exit = "*"
+mopidyapi = "*"
 
 [dev-packages]

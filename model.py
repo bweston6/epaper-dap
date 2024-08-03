@@ -2,8 +2,10 @@ import logging
 
 from menu import Menu, ListMenu, TileMenu, MenuItem
 from menu_bluetooth import BluetoothMenu
-from shapes import Point, Rectangle
+from menu_mopidy import MopidyMenu
+from model_mopidy import Mopidy
 from model_settings import Settings
+from shapes import Point, Rectangle
 
 logger = logging.getLogger(__name__)
 
@@ -16,6 +18,7 @@ class Model:
 
         # sub-models
         self.settings = Settings(self)
+        self.mopidy = Mopidy(self)
 
         # menu tree
         self.root_menu = TileMenu(
@@ -23,9 +26,24 @@ class Model:
         )
         self.root_menu.add_children(
             [
-                ListMenu(model=self, name="Songs"),
-                ListMenu(model=self, name="Albums"),
-                ListMenu(model=self, name="Artists"),
+                MopidyMenu(
+                    model=self,
+                    name="Songs",
+                    uri="local:directory?type=track",
+                    background_bitmap="menu_albums.bmp",
+                ),
+                MopidyMenu(
+                    model=self,
+                    name="Albums",
+                    uri="local:directory?type=album",
+                    background_bitmap="menu_albums.bmp",
+                ),
+                MopidyMenu(
+                    model=self,
+                    name="Artists",
+                    uri="local:directory?type=artist&role=albumartist",
+                    background_bitmap="menu_albums.bmp",
+                ),
                 ListMenu(model=self, name="Playlists"),
                 ListMenu(
                     model=self,

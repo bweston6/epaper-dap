@@ -111,7 +111,7 @@ class ListMenu(Menu):
 
     def add_child(self, child):
         super().add_child(child)
-        if self.selected_child is None and self.children:
+        if self.selected_child not in self.children:
             self.selected_child = self.children[0]
 
     def select_next(self):

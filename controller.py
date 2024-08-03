@@ -49,14 +49,14 @@ class Controller:
                 self.model.current_menu.cleanup()
             except AttributeError:
                 pass
-            self.model.current_menu = self.model.current_menu.parent
+            self.model.current_menu.parent.callback()
 
     def tile_menu_controller(self, touch_event):
         for i, touch_target in enumerate(
             self.model.current_menu.child_locations,
         ):
             if touch_target.contains_point(touch_event.touch_points[0]):
-                self.model.current_menu = self.model.current_menu.children[i]
+                self.model.current_menu.children[i].callback()
                 return
 
     def list_menu_controller(self, touch_event):
