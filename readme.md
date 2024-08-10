@@ -12,12 +12,15 @@
   * `mopidy-local`
 * `pipenv`
 
-## Mopidy Config
-As root, copy the Mopidy config included in the repo to Mopidy's system service config directory. Also enable the Mopidy service:
+## Prerequisites Setup
+Copy the Mopidy and PulseAudio config to their respective locations. Restart PulseAudio and start/enable the `mopidy` service:
 
 ```sh
-# cp ./mopidy.conf /etc/mopidy/mopidy.conf
-# systemctl enable --now mopidy
+$ sudo  cp ./mopidy.conf /etc/mopidy/mopidy.conf
+$ sudo cp ./mopidy.pa /etc/pulse/default.pa.d/mopidy.pa
+$ pulseaudio --kill
+$ pulseaudio -D
+$ sudo systemctl enable --now mopidy
 ```
 
 ## Running
