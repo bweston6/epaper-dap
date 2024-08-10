@@ -46,9 +46,9 @@ class Menu(metaclass=ABCMeta):
         self.model.current_menu = self
 
     def get_children_as_list(self):
-        if type(self.children) is dict:
+        if isinstance(self.children, dict):
             return list(self.children.values())
-        if type(self.children) is list:
+        if isinstance(self.children, list):
             return self.children
 
 

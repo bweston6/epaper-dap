@@ -9,15 +9,15 @@ from menu import ListMenu, TileMenu, MenuItem
 class View:
     def __init__(self):
         self.display = Display(rotate=90)
-        self.bitmaps_dir = (Path(__file__).parent /
-                            "./assets/bitmaps").resolve()
+        self.bitmaps_dir = (Path(__file__).parent / "./assets/bitmaps").resolve()
         self.fonts_dir = (Path(__file__).parent / "./assets/fonts").resolve()
 
     def render_listmenu(self, menu, partial_refresh=False):
         FIRST_ITEM_BASELINE = 41
         FIRST_ITEM_START = 28
         LINE_HEIGHT = 16
-        LINE_WIDTH = 198
+        LINE_WIDTH = 196
+        TEXT_GAP = 2
         MAX_DISPLAY_ITEMS = 6
         REGULAR_FONT_SIZE = 15
         SMALL_FONT_SIZE = 11
@@ -33,8 +33,7 @@ class View:
             size=SMALL_FONT_SIZE,
         )
 
-        bitmap = Image.open(
-            (self.bitmaps_dir / menu.background_bitmap).resolve())
+        bitmap = Image.open((self.bitmaps_dir / menu.background_bitmap).resolve())
         drawing = ImageDraw.Draw(bitmap)
 
         children = menu.get_children_as_list()
@@ -66,19 +65,12 @@ class View:
                     not font_color,
                 )
 
-            # draw name
-            drawing.text(
-                (2, FIRST_ITEM_BASELINE + LINE_HEIGHT * i),
-                child.name,
-                fill=font_color,
-                font=font_regular,
-                anchor="ls",
-            )
-
+            value_length = 0
             # draw value for MenuItems (calling value callback)
             if isinstance(child, MenuItem) and callable(child.value):
+                value_length = drawing.textlength(child.value(), font_small)
                 drawing.text(
-                    (193, FIRST_ITEM_BASELINE + LINE_HEIGHT * i),
+                    (LINE_WIDTH - TEXT_GAP, FIRST_ITEM_BASELINE + LINE_HEIGHT * i),
                     child.value(),
                     fill=font_color,
                     font=font_small,
@@ -86,13 +78,33 @@ class View:
                 )
 
             if isinstance(child, MenuItem) and not callable(child.value):
+                value_length = drawing.textlength(child.value, font_small)
                 drawing.text(
-                    (193, FIRST_ITEM_BASELINE + LINE_HEIGHT * i),
+                    (LINE_WIDTH - TEXT_GAP, FIRST_ITEM_BASELINE + LINE_HEIGHT * i),
                     child.value,
                     fill=font_color,
                     font=font_small,
                     anchor="rs",
                 )
+
+            # truncate name if required
+            name_chars = len(child.name)
+            while True:
+                placeholder = "" if name_chars == len(child.name) else "…"
+                truncated_name = child.name[:name_chars].rstrip() + placeholder
+                name_length = drawing.textlength(truncated_name, font_regular)
+                if (name_length + TEXT_GAP + value_length) <= LINE_WIDTH:
+                    break
+                name_chars -= 1
+
+            # draw name
+            drawing.text(
+                (TEXT_GAP, FIRST_ITEM_BASELINE + LINE_HEIGHT * i),
+                truncated_name,
+                fill=font_color,
+                font=font_regular,
+                anchor="ls",
+            )
 
         listmenu_buttons_bitmap = Image.open(
             (self.bitmaps_dir / "listmenu_buttons.bmp").resolve()
